@@ -1,139 +1,60 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>證道系統 - 雙風格界面</title>
-    <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-    <style>
-        :root { --modern-bg: #f4f7f6; --modern-primary: #4a90e2; }
-        body { margin: 0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; }
-
-        /* --- 風格 A: PTT 經典黑底 (頂部/聖經區) --- */
-        .ptt-section {
-            background-color: #000;
-            color: #bbbbbb;
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 3px solid #555;
-            font-family: "Fixedsys", "MingLiU", monospace;
-        }
-        .ptt-header { color: #fff; border-bottom: 1px solid #555; margin-bottom: 10px; }
-        .ptt-tag { color: #ffffff; background: #0000aa; padding: 2px 5px; }
-        .ptt-verse { color: #00ff00; line-height: 1.8; white-space: pre-wrap; margin-top: 15px; }
-        .ptt-ref { color: #ffff00; }
-        .ptt-input-group { margin-bottom: 10px; }
-        .ptt-select { background: #000; color: #fff; border: 1px solid #fff; }
-
-        /* --- 風格 B: 現代簡約雲端 (底部/上傳區) --- */
-        .modern-section {
-            background-color: var(--modern-bg);
-            flex: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-        }
-        .upload-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: center;
-            width: 100%;
-            max-width: 500px;
-        }
-        .modern-btn {
-            background: var(--modern-primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s;
-        }
-        .modern-btn:hover { background: #357abd; transform: translateY(-2px); }
-        #preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            margin-top: 20px;
-            width: 100%;
-        }
-        .thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #fff; }
-    </style>
-</head>
-<body>
-
-<div class="ptt-section">
-    <div class="ptt-header">作者: Preacher (證道者) 看板: Bible_Study</div>
-    <div class="ptt-header">標題: <span class="ptt-tag">今日經文</span> 點選章節自動顯示</div>
+<div class="upload-card">
+    <p class="slogan">讓聖靈的感動，依日期珍藏於教會雲端...</p>
     
-    <div class="ptt-input-group">
-        <select id="bookSelect" class="ptt-select">
-            <option value="john">約翰福音</option>
-            <option value="psalms">詩篇</option>
-            <option value="genesis">創世記</option>
-        </select>
-        <button onclick="fetchBible()" style="background:#555; color:#fff; cursor:pointer;">[ 查詢 ]</button>
-    </div>
-
-    <div id="bible-display" class="ptt-verse">
-        請在上方選擇書卷並點擊查詢...
-    </div>
-</div>
-
-<div class="modern-section">
-    <div class="upload-card">
-        <h3 style="color: #333; margin-top: 0;">雲端多媒體中心</h3>
-        <p style="color: #666; font-size: 14px;">上傳本次證道的影像或照片至雲端存儲</p>
-        <button id="upload_widget" class="modern-btn">選擇檔案並上傳</button>
-        
-        <div id="preview-grid"></div>
-    </div>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+    <button id="uploadBtn" class="upload-btn">一鍵上傳至 Google Drive</button>
+    
+    <div id="status" style="margin-top:20px; color:#1a73e8; font-weight:bold;"></div>
+    <div id="preview-grid"></div>
 </div>
 
 <script>
-    // 1. 聖經查詢邏輯 (PTT 風格)
-    async function fetchBible() {
-        const book = document.getElementById('bookSelect').value;
-        const display = document.getElementById('bible-display');
-        display.innerHTML = "系統載入中...";
-        
-        try {
-            const res = await fetch(`https://bible-api.com/${book}+1`);
-            const data = await res.json();
-            display.innerHTML = `<span class="ptt-ref">查詢結果：${data.reference}</span>\n\n${data.text}`;
-        } catch (e) {
-            display.innerText = "連線失敗，請檢查網路。";
-        }
-    }
+    const scriptUrl = '您的_APPS_SCRIPT_網址'; // 貼上第一步取得的網址
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const status = document.getElementById('status');
 
-    // 2. 雲端上傳邏輯 (現代風格)
-    const myWidget = cloudinary.createUploadWidget({
-        cloudName: 'YOUR_CLOUD_NAME', // 填入你的 Cloudinary 名稱
-        uploadPreset: 'YOUR_PRESET',   // 填入你的 Unsigned Preset
-        sources: ['local', 'camera'],
-        multiple: true
-    }, (error, result) => {
-        if (!error && result && result.event === "success") {
-            const grid = document.getElementById('preview-grid');
-            const url = result.info.secure_url;
-            
-            // 根據類型顯示
-            if (result.info.resource_type === 'image') {
-                grid.innerHTML += `<img src="${url}" class="thumb">`;
-            } else {
-                grid.innerHTML += `<div style="font-size:10px; background:#ddd; padding:5px;">影片已存</div>`;
-            }
+    uploadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', async () => {
+        const files = fileInput.files;
+        if (files.length === 0) return;
+
+        status.innerText = "正在處理並依日期分類中...";
+        
+        for (let file of files) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64 = reader.result.split(',')[1];
+                const payload = {
+                    base64: base64,
+                    type: file.type,
+                    name: file.name
+                };
+
+                try {
+                    const response = await fetch(scriptUrl, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if(result.result === 'success') {
+                        status.innerText = "✅ 上傳成功！已存入今日資料夾。";
+                        showPreview(reader.result);
+                    }
+                } catch (e) {
+                    status.innerText = "❌ 上傳失敗，請稍後再試。";
+                }
+            };
         }
     });
 
-    document.getElementById("upload_widget").addEventListener("click", () => myWidget.open());
+    function showPreview(src) {
+        const grid = document.getElementById('preview-grid');
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'thumb';
+        grid.appendChild(img);
+    }
 </script>
-
-</body>
-</html>
