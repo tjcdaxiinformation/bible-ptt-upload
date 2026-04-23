@@ -1,18 +1,29 @@
-<div class="upload-card">
-    <p class="slogan">讓聖靈的感動，依日期珍藏於教會雲端...</p>
-    
-    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
-    <button id="uploadBtn" class="upload-btn">一鍵上傳至 Google Drive</button>
-    
-    <div id="status" style="margin-top:20px; color:#1a73e8; font-weight:bold;"></div>
-    <div id="preview-grid"></div>
+<div class="ptt-banner">
+    <div class="ptt-title">★ 2026上半年大溪教會靈恩佈道會 ★</div>
+    <div class="ptt-subtitle">「保留所有感動時刻」影像與照片上傳專區</div>
+    <div class="ptt-author">狀態: <span id="status-text" style="color: #00ff00;">連線中...</span></div>
+</div>
+
+<div class="upload-section">
+    <div class="upload-card">
+        <p class="slogan">讓聖靈的感動，依日期珍藏於教會雲端...</p>
+        
+        <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+        <button id="uploadBtn" class="upload-btn">一鍵上傳至 Google Drive</button>
+        
+        <div id="upload-result" style="margin-top: 30px; font-size: 18px; font-weight: bold;"></div>
+    </div>
 </div>
 
 <script>
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyop5rb3uT6OhmdxyBoRAHxbuoYHva_ASQ6KqAPPWiBt_AD8jamNHPV5mPpZdW2uDov/exec'; // 貼上第一步取得的網址
+    const scriptUrl = '您的_APPS_SCRIPT_網址'; 
     const uploadBtn = document.getElementById('uploadBtn');
     const fileInput = document.getElementById('fileInput');
-    const status = document.getElementById('status');
+    const resultDiv = document.getElementById('upload-result');
+    const statusHeader = document.getElementById('status-text');
+
+    // 初始化狀態
+    statusHeader.innerText = "系統就緒";
 
     uploadBtn.addEventListener('click', () => fileInput.click());
 
@@ -20,41 +31,62 @@
         const files = fileInput.files;
         if (files.length === 0) return;
 
-        status.innerText = "正在處理並依日期分類中...";
-        
-        for (let file of files) {
+        // 清空舊狀態，顯示處理中
+        resultDiv.innerHTML = "";
+        statusHeader.innerText = "檔案處理中...";
+        statusHeader.style.color = "#ffff00"; // 黃色代表處理中
+
+        let successCount = 0;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64 = reader.result.split(',')[1];
-                const payload = {
-                    base64: base64,
-                    type: file.type,
-                    name: file.name
-                };
+            
+            // 使用 Promise 確保檔案依序或併發處理
+            const uploadPromise = new Promise((resolve) => {
+                reader.readAsDataURL(file);
+                reader.onload = async () => {
+                    const base64 = reader.result.split(',')[1];
+                    const payload = {
+                        base64: base64,
+                        type: file.type,
+                        name: file.name
+                    };
 
-                try {
-                    const response = await fetch(scriptUrl, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-                    const result = await response.json();
-                    if(result.result === 'success') {
-                        status.innerText = "✅ 上傳成功！已存入今日資料夾。";
-                        showPreview(reader.result);
+                    try {
+                        const response = await fetch(scriptUrl, {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+                        const res = await response.json();
+                        if (res.result === 'success') {
+                            successCount++;
+                        }
+                        resolve();
+                    } catch (e) {
+                        console.error(e);
+                        resolve();
                     }
-                } catch (e) {
-                    status.innerText = "❌ 上傳失敗，請稍後再試。";
-                }
-            };
+                };
+            });
+            await uploadPromise;
         }
-    });
 
-    function showPreview(src) {
-        const grid = document.getElementById('preview-grid');
-        const img = document.createElement('img');
-        img.src = src;
-        img.className = 'thumb';
-        grid.appendChild(img);
-    }
+        // 完成後的顯示邏輯
+        if (successCount > 0) {
+            resultDiv.innerHTML = `<div style="color: #28a745;">✅ 成功上傳 ${successCount} 個檔案！</div>`;
+            statusHeader.innerText = "上傳完成";
+            statusHeader.style.color = "#00ff00";
+        } else {
+            resultDiv.innerHTML = `<div style="color: #dc3545;">❌ 上傳失敗，請檢查網路或檔案大小。</div>`;
+            statusHeader.innerText = "上傳失敗";
+            statusHeader.style.color = "#ff0000";
+        }
+        
+        // 3秒後恢復就緒狀態
+        setTimeout(() => {
+            statusHeader.innerText = "系統就緒";
+            statusHeader.style.color = "#00ff00";
+        }, 3000);
+    });
 </script>
