@@ -1,28 +1,171 @@
-<div class="ptt-banner">
-    <div class="ptt-title">★ 2026上半年大溪教會靈恩佈道會 ★</div>
-    <div class="ptt-subtitle">「保留所有感動時刻」影像與照片上傳專區</div>
-    <div class="ptt-author">狀態: <span id="status-text" style="color: #00ff00;">連線中...</span></div>
-</div>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026大溪教會靈恩佈道會 - 影像上傳</title>
+    <style>
+        :root {
+            --ig-blue: #0095f6;
+            --tjc-dark: #333; /* 真耶穌教會常用深色 */
+            --bg-color: #fafafa;
+        }
 
-<div class="upload-section">
-    <div class="upload-card">
-        <p class="slogan">讓聖靈的感動，依日期珍藏於教會雲端...</p>
-        
-        <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
-        <button id="uploadBtn" class="upload-btn">一鍵上傳至 Google Drive</button>
-        
-        <div id="upload-result" style="margin-top: 30px; font-size: 18px; font-weight: bold;"></div>
+        /* 基礎設定：強制直式長條型 (IG Story 風格) */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #dbdbdb; /* 模擬手機框外的背景 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 手機容器 (9:16) */
+        .phone-container {
+            width: 100%;
+            max-width: 420px; /* 模擬大螢幕手機寬度 */
+            height: 100vh; /* 在手機上全螢幕 */
+            background-color: var(--bg-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* --- 背景 Logo 浮水印 --- */
+        .bg-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; /* Logo 寬度佔螢幕的 80% */
+            opacity: 0.05; /* 極低的透明度，作為底紋 */
+            z-index: 1;
+            pointer-events: none; /* 防止 Logo 阻擋點擊 */
+        }
+
+        /* 如果沒有真實 logo.png，顯示一個預設圓形 */
+        .bg-logo-placeholder {
+            width: 200px;
+            height: 200px;
+            background-color: #ccc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* --- 上方 PTT/佈告欄區 --- */
+        .header-section {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+            border-bottom: 1px solid #444;
+        }
+        .ptt-title { color: #ffff00; font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .ptt-subtitle { color: #00ff00; font-size: 14px; }
+        .status-bar { color: #fff; font-size: 12px; margin-top: 10px; font-family: monospace; }
+
+        /* --- 中間上傳區 (核心) --- */
+        .main-upload-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 5;
+            padding: 20px;
+        }
+
+        .upload-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #eaeaea;
+        }
+
+        /* 放大在中間的上傳鈕 */
+        .upload-btn {
+            background-color: var(--ig-blue);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 8px 20px rgba(0, 149, 246, 0.3);
+            width: 100%;
+            display: block;
+        }
+        .upload-btn:hover { background-color: #0077cc; }
+        .upload-btn:active { transform: scale(0.95); }
+
+        .slogan { color: #666; font-size: 14px; margin-bottom: 25px; font-style: italic; }
+
+        /* --- 下方結果顯示區 --- */
+        .result-section {
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+            background-color: rgba(250, 250, 250, 0.9);
+            border-top: 1px solid #eaeaea;
+        }
+        #upload-result { font-size: 16px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <div class="bg-logo">
+            <div class="bg-logo-placeholder">TJC</div>
+        </div>
+
+        <div class="header-section">
+            <div class="ptt-title">★ 2026上半年大溪教會靈恩佈道會 ★</div>
+            <div class="ptt-subtitle">「保留感動時刻」影像上傳專區</div>
+            <div class="status-bar">狀態: <span id="status-text" style="color: #00ff00;">連線中...</span></div>
+        </div>
+
+        <div class="main-upload-area">
+            <div class="upload-card">
+                <p class="slogan">讓聖靈的感動，依日期珍藏於教會雲端...</p>
+                
+                <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+                <button id="uploadBtn" class="upload-btn">一鍵上傳照片/影片</button>
+                
+                <p style="font-size: 11px; color: #999; margin-top: 15px;">* 檔案將依日期自動分類存檔</p>
+            </div>
+        </div>
+
+        <div class="result-section">
+            <div id="upload-result"></div>
+        </div>
     </div>
-</div>
 
 <script>
+    // 請填入您的 Google Apps Script 部署網址
     const scriptUrl = '您的_APPS_SCRIPT_網址'; 
     const uploadBtn = document.getElementById('uploadBtn');
     const fileInput = document.getElementById('fileInput');
     const resultDiv = document.getElementById('upload-result');
     const statusHeader = document.getElementById('status-text');
 
-    // 初始化狀態
     statusHeader.innerText = "系統就緒";
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -31,10 +174,9 @@
         const files = fileInput.files;
         if (files.length === 0) return;
 
-        // 清空舊狀態，顯示處理中
         resultDiv.innerHTML = "";
         statusHeader.innerText = "檔案處理中...";
-        statusHeader.style.color = "#ffff00"; // 黃色代表處理中
+        statusHeader.style.color = "#ffff00";
 
         let successCount = 0;
 
@@ -42,7 +184,6 @@
             const file = files[i];
             const reader = new FileReader();
             
-            // 使用 Promise 確保檔案依序或併發處理
             const uploadPromise = new Promise((resolve) => {
                 reader.readAsDataURL(file);
                 reader.onload = async () => {
@@ -72,21 +213,29 @@
             await uploadPromise;
         }
 
-        // 完成後的顯示邏輯
-        if (successCount > 0) {
-            resultDiv.innerHTML = `<div style="color: #28a745;">✅ 成功上傳 ${successCount} 個檔案！</div>`;
-            statusHeader.innerText = "上傳完成";
-            statusHeader.style.color = "#00ff00";
-        } else {
-            resultDiv.innerHTML = `<div style="color: #dc3545;">❌ 上傳失敗，請檢查網路或檔案大小。</div>`;
-            statusHeader.innerText = "上傳失敗";
-            statusHeader.style.color = "#ff0000";
-        }
+        // --- 修改後的完成顯示邏輯 ---
+if (successCount > 0) {
+    resultDiv.innerHTML = `
+        <div style="color: #28a745; font-size: 20px; margin-bottom: 10px;">✅ 成功上傳 ${successCount} 個檔案！</div>
+        <div style="color: #333; line-height: 1.6; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #ddd;">
+            願神記念施恩賜福！<br>平安！
+        </div>
+    `;
+    statusHeader.innerText = "上傳完成";
+    statusHeader.style.color = "#00ff00";
+} else {
+    resultDiv.innerHTML = `<div style="color: #dc3545;">❌ 上傳失敗，請檢查網路或檔案大小。</div>`;
+    statusHeader.innerText = "上傳失敗";
+    statusHeader.style.color = "#ff0000";
+}
         
-        // 3秒後恢復就緒狀態
+        // 3秒後恢復就緒
         setTimeout(() => {
             statusHeader.innerText = "系統就緒";
             statusHeader.style.color = "#00ff00";
         }, 3000);
     });
 </script>
+
+</body>
+</html>
